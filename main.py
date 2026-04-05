@@ -7,7 +7,7 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
-#from bell import bell
+#from src.bell import bell
 from src.handset import handset
 from src.tones import tones
 from src.rotary import rotary
