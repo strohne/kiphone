@@ -7,8 +7,8 @@ import time
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
-from handset import handset
-from tones import tones
+from src.handset import handset
+from src.tones import tones
 
 # Play a tone if the handset is lifted
 while True:

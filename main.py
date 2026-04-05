@@ -8,22 +8,22 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
 #from bell import bell
-from handset import handset
-from tones import tones
-from rotary import rotary
-from conversation import conversation
+from src.handset import handset
+from src.tones import tones
+from src.rotary import rotary
+from src.conversation import conversation
 
 if __name__ == "__main__":
     print("Phone started.")
 
     while True:
-        # ── Hang-up: stop any activities ──
+        # ── Hang-up state: stop any activities ──
         if not handset.is_lifted:
             tones.stop()
             conversation.stop()
             rotary.stop()
 
-        # ── Dialing: wait for number ──
+        # ── Dialing state: wait for number ──
         elif rotary.is_dialing:
             conversation.stop()
             tones.stop()

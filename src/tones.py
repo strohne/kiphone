@@ -6,7 +6,6 @@ import threading
 import numpy as np
 import sounddevice as sd
 
-
 class Playback:
     """
     Handles all audio tones that is not part of the AI conversation stream.
@@ -54,7 +53,7 @@ class Playback:
             callback=_callback,
         )
         self._dial_tone_stream.start()
-        print("Dial tone started.")
+        print("Tones: Dial tone started.")
 
     def stop(self) -> None:
         """Immediately stop both the dial tone and the ring loop."""
@@ -65,15 +64,17 @@ class Playback:
                 self._dial_tone_stream.close()
             finally:
                 self._dial_tone_stream = None
-                print("Dial tone stopped.")
+                print("Tones: Dial tone stopped.")
 
         # cancel pending ring timer and abort current playback
         self._ring_stop.set()
         if self._ring_timer is not None:
             self._ring_timer.cancel()
             self._ring_timer = None
-        sd.stop()           # immediately cut off any active sd.play()
-        #print("Ring tone stopped.")
+
+        # immediately cut off any active sd.play()
+        sd.stop()
+        #print("Tones: Ring tone stopped.")
 
     # ------------------------------------------------------------------
     # Ring timer callbacks
@@ -83,10 +84,10 @@ class Playback:
         """Play one ring burst, then schedule _after_burst."""
         if self._ring_stop.is_set():
             self._ring_timer = None
-            print("Ring loop ended.")
+            print("Tones: Ring loop ended.")
             return
         self._ring_burst_count += 1
-        print(f"Ring burst {self._ring_burst_count}...")
+        print(f"Tones: Ring burst {self._ring_burst_count}.")
         sd.play(self._ring_signal, samplerate=self.rate)
         self._ring_timer = threading.Timer(self._ring_tone_dur, self._after_burst)
         self._ring_timer.start()
@@ -95,7 +96,7 @@ class Playback:
         """Called when a burst has finished – schedules the next burst after the pause."""
         if self._ring_stop.is_set():
             self._ring_timer = None
-            print("Ring loop ended.")
+            print("Tones: Ring loop ended.")
             return
         self._ring_timer = threading.Timer(self._ring_pause_dur, self._fire_burst)
         self._ring_timer.start()
@@ -130,7 +131,7 @@ class Playback:
         ).astype(np.float32)
 
         self._fire_burst()
-        print("Ring tone started.")
+        print("Tones: Ring tone started.")
 
     # ------------------------------------------------------------------
     # Blocking tones
@@ -161,16 +162,16 @@ class Playback:
         :param pause_dur: Silence between bursts in seconds.
         """
         for i in range(repeats):
-            print(f"Ring {i + 1}/{repeats}: tone...")
+            print(f"Tones: Ring tone {i + 1}/{repeats}")
             t = np.linspace(0, tone_dur, int(self.rate * tone_dur), endpoint=False)
             signal = (0.1 * np.sin(2 * np.pi * self.freq * t)).astype(np.float32)
             sd.play(signal, samplerate=self.rate)
             sd.wait()
             if i < repeats - 1:
-                print("Pause...")
+                print("Tones: Pause.")
                 import time
                 time.sleep(pause_dur)
-        print("Ringing tone finished.")
+        print("Tones: Ringing tone finished.")
 
 # Module-level singleton
 tones = Playback()

@@ -66,7 +66,7 @@ class Connection:
         """
         try:
             self._ws = self._create_connection()
-            print("Connected to OpenAI WebSocket")
+            print("Connection: Connected to OpenAI WebSocket")
 
             recv_thread = threading.Thread(target=self._receive_loop)
             send_thread = threading.Thread(target=self._send_loop)
@@ -76,7 +76,7 @@ class Connection:
             self._send_session_update()
 
             if self.greeting:
-                print(f"Injecting greeting: {self.greeting}")
+                print(f"Connection: Injecting {self.greeting}")
                 self._inject_audio(self.greeting)
 
             while not self.stop_event.is_set():
@@ -89,10 +89,10 @@ class Connection:
 
             recv_thread.join()
             send_thread.join()
-            print("Connection closed")
+            print("Connection: Closed.")
 
         except Exception as e:
-            print(f"Connection failed: {e}")
+            print(f"Connection: Failed: {e}")
         finally:
             if self._ws:
                 try:
@@ -139,11 +139,11 @@ class Connection:
                     try:
                         self._ws.send(msg)
                     except Exception as e:
-                        print(f"Mic send error: {e}")
+                        print(f"Audio: Microhpone send error: {e}")
         except Exception as e:
-            print(f"Send thread error: {e}")
+            print(f"Audio: Send thread error: {e}")
         finally:
-            print("Send thread finished")
+            print("Audio: Send thread finished.")
 
     def _receive_loop(self) -> None:
         """Receive audio deltas and events from the WebSocket."""
@@ -155,13 +155,13 @@ class Connection:
                 try:
                     data = json.loads(message)
                 except json.JSONDecodeError:
-                    print("Invalid JSON received")
+                    print("Receive: Invalid JSON data.")
                     continue
                 self._handle_event(data)
         except Exception as e:
-            print(f"Receive thread error: {e}")
+            print(f"Receive: Thread error: {e}")
         finally:
-            print("Receive thread finished")
+            print("Receive: Thread finished.")
 
     def _handle_event(self, data: dict) -> None:
         """Dispatch a single WebSocket event to the appropriate handler."""
@@ -190,15 +190,15 @@ class Connection:
                         break
 
             if transcript:
-                print(f"You: {transcript}")
+                print(f"*You*: {transcript}")
                 self._process_transcript(transcript)
 
         elif event_type == "conversation.item.input_audio_transcription.failed":
-            print(f"User transcript failed: {data.get('error', {})}")
+            print(f"Converation: User transcription failed: {data.get('error', {})}")
 
         # Transcription of AI speech
         elif event_type == "response.audio_transcript.done":
-            print(f"AI: {data.get('transcript', '')}")
+            print(f"*AI*: {data.get('transcript', '')}")
 
     def _send_session_update(self) -> None:
         """Push the current session configuration (instructions, voice, VAD …) to the API."""
@@ -233,9 +233,9 @@ class Connection:
         }
         try:
             self._ws.send(json.dumps(session_config))
-            print("Session update sent")
+            print("Connection: Session update sent.")
         except Exception as e:
-            print(f"Session update failed: {e}")
+            print(f"Connection: Session update failed: {e}")
 
     def _inject_audio(self, wav_path: str) -> None:
         """
@@ -269,9 +269,9 @@ class Connection:
 
             self._ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
             self._ws.send(json.dumps({"type": "response.create"}))
-            print("Injected audio sent to AI")
+            print("Audio: Injected file.")
         except Exception as e:
-            print(f"Could not inject audio: {e}")
+            print(f"Audio: Could not inject audio: {e}")
 
     def _process_transcript(self, transcript: str) -> None:
         """
@@ -285,6 +285,6 @@ class Connection:
         for name, info in persons.items():
             if name.lower() in transcript.lower():
                 self.persons[0] = {"name": name, **info}
-                print(f"Caller identified: {self.persons[0]}")
+                print(f"Conversation: Caller {self.persons[0]} identified.")
                 self._send_session_update()
                 break

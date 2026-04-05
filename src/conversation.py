@@ -14,7 +14,7 @@ import numpy as np
 import pyaudio
 
 from config.roles import roles as roles
-from connection import Connection
+from src.connection import Connection
 
 class Conversation:
     """
@@ -71,7 +71,7 @@ class Conversation:
         self.is_running = True
 
         self.role = role
-        self.greeting = "greeting.wav" if greeting else None
+        self.greeting = "assets/greeting.wav" if greeting else None
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
@@ -80,7 +80,7 @@ class Conversation:
         if not self.is_active:
             return
 
-        print("Stopping conversation...")
+        print("Conversation: Stopping...")
         self.stop_event.set()
         self.ready_event.clear()
         if self._thread:
@@ -131,8 +131,9 @@ class Conversation:
         )
 
         role = self._resolve_role()
+        print(f"Conversation: Role: {role['name']}")
+
         persons = [None]
-        print(f"Role: {role['name']}  |  Style: {role['gpt_style']}")
 
         try:
             mic_stream.start_stream()
@@ -149,7 +150,7 @@ class Conversation:
             ).connect()
 
         except Exception as e:
-            print(f"Conversation error: {e}")
+            print(f"Conversation: Error {e}")
 
         finally:
             mic_stream.stop_stream()
@@ -158,7 +159,7 @@ class Conversation:
             speaker_stream.close()
             p.terminate()
             self._stop_recording()
-            print("Conversation ended.")
+            print("Conversation: Ended.")
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -181,7 +182,7 @@ class Conversation:
         self._mic_wav_file.setnchannels(1)
         self._mic_wav_file.setsampwidth(2)   # paInt16 = 2 bytes
         self._mic_wav_file.setframerate(self.rate)
-        print(f"Recording microphone to: {wav_path}")
+        print(f"Recording: Started in {wav_path}")
 
     def _stop_recording(self) -> None:
         """Flush and close the microphone WAV file."""
@@ -200,7 +201,7 @@ class Conversation:
         if 0 <= self.role < len(roles):
             return roles[self.role]
 
-        print("Invalid role number – choosing randomly.")
+        print("Conversation: Invalid role number, choosing randomly.")
         return random.choice(roles)
 
     def _process_audio(self, data: bytes) -> bytes:

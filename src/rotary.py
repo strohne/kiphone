@@ -6,7 +6,6 @@ import time
 from typing import Callable, Optional
 import RPi.GPIO as GPIO
 
-
 class RotaryWheel:
     """
     Handles the rotary-dial pulse decoder.
@@ -21,7 +20,7 @@ class RotaryWheel:
         pin_pulse: int = 26,
         pin_detect: int = 16,
         pulse_separation: int = 50,
-        pulse_timeout: float = 1.5,
+        pulse_timeout: float = 0.5,
     ):
         """
         :param pin_pulse: BCM GPIO pin connected to the rotary-dial pulse output.
@@ -82,12 +81,12 @@ class RotaryWheel:
             self._pulse_count += 1
 
         self.is_dialing = True
-        print(f"Pulse {self._pulse_count} detected")
+        print(f"Rotary: Pulse {self._pulse_count} detected.")
 
     @property
     def is_active(self) -> bool:
-        """Return True if dialing is in progress."""
-        return (GPIO.input(self.pin_detect) == GPIO.LOW) or self.is_dialing
+        """Return True if dialing is in progress, as detected by the rotary switch."""
+        return GPIO.input(self.pin_detect) == GPIO.LOW
 
     def stop(self):
         self.number: int = 0
@@ -107,7 +106,7 @@ class RotaryWheel:
         :param timeout: Seconds of silence after the last pulse before returning.
         :return: Dialled digit 0–9, or None if no pulses were detected.
         """
-        print("Dialing started.")
+        print("Rotary: Dialing started.")
 
         while True:
             gap = time.time() - self._last_pulse_time
@@ -118,10 +117,10 @@ class RotaryWheel:
 
         if (self._pulse_count < 1) or (self._pulse_count > 10):
             self.number = None
-            print("No valid digit detected.")
+            print("Rotary: No valid digit detected.")
         else:
             self.number = 0 if self._pulse_count > 9 else self._pulse_count
-            print(f"Dialled digit: {self.number}.")
+            print(f"Rotary Dialled digit: {self.number}.")
 
         self.is_dialing = False
         return self.number
