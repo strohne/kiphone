@@ -1,5 +1,5 @@
 #
-# Test handset lifting
+# Test dialing
 #
 
 

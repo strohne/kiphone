@@ -10,6 +10,8 @@ The code is based on:
 
 ![W38 phone](assets/w38.png)
 
+![W38 phone with raspberry pi](assets/beforeafter.png)
+
 # Wiring
 
 - Hook switch: GPIO5 (pin 29)
@@ -130,7 +132,7 @@ sudo nmcli device wifi hotspot ssid <hotspot name> password <hotspot password> i
 # TODO
 
 - Rotary / pulse detection not stable (clean mechanical switches)
-- Handle ALSA lib pcm.c:8772:(snd_pcm_recover) underrun occurred
+- Handle ALSA lib pcm.c:8772:(snd_pcm_recover) underrun occurred (timing issue ?)
 - User transcript looks odd, review code and API results
 - After some idle time, the phone event loop is somewhat broken
 - Bell is not wired yet
