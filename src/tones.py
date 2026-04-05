@@ -28,7 +28,6 @@ class Playback:
         self._ring_pause_dur: float = 4.0
         self._ring_burst_count: int = 0
         self._ring_signal: np.ndarray | None = None
-        self._ring_generation: int = 0  # incremented on every stop/start to invalidate stale callbacks
 
     # ------------------------------------------------------------------
     # Dial tone – non-blocking
@@ -67,8 +66,7 @@ class Playback:
                 self._dial_tone_stream = None
                 print("Tones: Dial tone stopped.")
 
-        # invalidate all in-flight timer callbacks before setting the event
-        self._ring_generation += 1
+        # cancel pending ring timer and abort current playback
         self._ring_stop.set()
         if self._ring_timer is not None:
             self._ring_timer.cancel()
@@ -82,25 +80,25 @@ class Playback:
     # Ring timer callbacks
     # ------------------------------------------------------------------
 
-    def _fire_burst(self, gen: int) -> None:
+    def _fire_burst(self) -> None:
         """Play one ring burst, then schedule _after_burst."""
-        if self._ring_stop.is_set() or gen != self._ring_generation:
+        if self._ring_stop.is_set():
             self._ring_timer = None
             print("Tones: Ring loop ended.")
             return
         self._ring_burst_count += 1
         print(f"Tones: Ring burst {self._ring_burst_count}.")
         sd.play(self._ring_signal, samplerate=self.rate)
-        self._ring_timer = threading.Timer(self._ring_tone_dur, self._after_burst, args=[gen])
+        self._ring_timer = threading.Timer(self._ring_tone_dur, self._after_burst)
         self._ring_timer.start()
 
-    def _after_burst(self, gen: int) -> None:
+    def _after_burst(self) -> None:
         """Called when a burst has finished – schedules the next burst after the pause."""
-        if self._ring_stop.is_set() or gen != self._ring_generation:
+        if self._ring_stop.is_set():
             self._ring_timer = None
             print("Tones: Ring loop ended.")
             return
-        self._ring_timer = threading.Timer(self._ring_pause_dur, self._fire_burst, args=[gen])
+        self._ring_timer = threading.Timer(self._ring_pause_dur, self._fire_burst)
         self._ring_timer.start()
 
     def ring(
@@ -122,8 +120,6 @@ class Playback:
             return  # already ringing
 
         self._ring_stop.clear()
-        self._ring_generation += 1          # new generation – stale callbacks will not match
-        gen = self._ring_generation
         self._ring_tone_dur = tone_dur
         self._ring_pause_dur = pause_dur
         self._ring_burst_count = 0
@@ -134,7 +130,7 @@ class Playback:
             )
         ).astype(np.float32)
 
-        self._fire_burst(gen)
+        self._fire_burst()
         print("Tones: Ring tone started.")
 
     # ------------------------------------------------------------------
