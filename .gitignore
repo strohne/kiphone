@@ -1,0 +1,5 @@
+.lg*
+.idea
+config/config.py
+private/*
+recordings/*
