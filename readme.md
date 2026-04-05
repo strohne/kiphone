@@ -131,5 +131,6 @@ sudo nmcli device wifi hotspot ssid <hotspot name> password <hotspot password> i
 
 - Rotary / pulse detection not stable (clean mechanical switches)
 - Handle ALSA lib pcm.c:8772:(snd_pcm_recover) underrun occurred
+- User transcript looks odd, review code and API results
 - After some idle time, the phone event loop is somewhat broken
 - Bell is not wired yet
