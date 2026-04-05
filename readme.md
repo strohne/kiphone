@@ -1,10 +1,14 @@
 # KI Phone
 
-Based on https://www.heise.de/select/make/2026/2/2604114391585400402  
+The W38 is a classic desk telephone model developed in Germany in the 1930s, particularly by Siemens & Halske.
+It has enough space to house a Raspberry Pi so you can connect it to the OpenAI API.
 
-Based on https://github.com/MakeMagazinDE/KI-Telefon
+The code is based on:
+- https://github.com/MakeMagazinDE/KI-Telefon
+- https://www.heise.de/select/make/2026/2/2604114391585400402  
 
-![W38 phone](assets/kiphone.jpg)
+
+![W38 phone](assets/kiphone.png)
 
 # Wiring
 
