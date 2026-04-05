@@ -65,7 +65,7 @@ class Conversation:
         :param role: 1-based role index from the rotary dial, or None for random.
         :param greeting: Whether to inject the greeting WAV at the start of the session.
         """
-        if self.is_running:
+        if self.is_running or self.is_active:   # guard against stale threads after a join-timeout
             return
 
         self.is_running = True
@@ -78,13 +78,16 @@ class Conversation:
     def stop(self) -> None:
         """Signal the conversation to end and wait for the thread to finish."""
         if not self.is_active:
+            self.is_running = False
             return
 
         print("Conversation: Stopping...")
         self.stop_event.set()
         self.ready_event.clear()
         if self._thread:
-            self._thread.join(timeout=5)
+            self._thread.join(timeout=8)
+            if self._thread.is_alive():
+                print("Conversation: Warning – thread still alive after timeout, continuing anyway.")
         self.is_running = False
 
     @property
