@@ -8,7 +8,7 @@ The code is based on:
 - https://www.heise.de/select/make/2026/2/2604114391585400402  
 
 
-![W38 phone](assets/kiphone.png)
+![W38 phone](assets/w38.png)
 
 # Wiring
 
