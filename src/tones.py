@@ -29,14 +29,22 @@ class Playback:
         self._ring_burst_count: int = 0
         self._ring_signal: np.ndarray | None = None
 
+        self.is_running = False
+
     # ------------------------------------------------------------------
     # Dial tone – non-blocking
     # ------------------------------------------------------------------
 
     def beep(self) -> None:
         """Start the 425 Hz dial tone in the background (non-blocking)."""
+
+        if self.is_running:
+            return
+        self.is_running = True
+
         if self._dial_tone_stream is not None:
             return
+
         step = 2 * np.pi * self.freq / self.rate
         phase = {"phi": 0.0}
 
@@ -52,12 +60,54 @@ class Playback:
             dtype="float32",
             callback=_callback,
         )
+
         self._dial_tone_stream.start()
         print("Tones: Dial tone started.")
+
+    def ring(
+            self,
+            tone_dur: float = 1.0,
+            pause_dur: float = 3.0,
+    ) -> None:
+        """
+        Start the ringing tone sequence (non-blocking).
+
+        Fires repeating bursts of *tone_dur* seconds separated by *pause_dur*
+        seconds of silence, driven entirely by threading.Timer callbacks.
+        Returns immediately. Call stop() to end at any time.
+
+        :param tone_dur: Duration of each ring burst in seconds.
+        :param pause_dur: Silence between bursts in seconds.
+        """
+
+        if self.is_running:
+            return
+        self.is_running = True
+
+        print("Tones: Ring tone starting.")
+
+        self._ring_stop.clear()
+        self._ring_tone_dur = tone_dur
+        self._ring_pause_dur = pause_dur
+        self._ring_burst_count = 0
+        self._ring_signal = (
+                0.1 * np.sin(
+            2 * np.pi * self.freq *
+            np.linspace(0, tone_dur, int(self.rate * tone_dur), endpoint=False)
+        )
+        ).astype(np.float32)
+
+        self._fire_burst()
 
     def stop(self) -> None:
         """Immediately stop both the dial tone and the ring loop."""
         # stop dial tone stream
+
+        if not self.is_running:
+            return
+
+        print("Tones: Stopping")
+
         if self._dial_tone_stream is not None:
             try:
                 self._dial_tone_stream.stop()
@@ -75,6 +125,8 @@ class Playback:
         # immediately cut off any active sd.play()
         sd.stop()
         #print("Tones: Ring tone stopped.")
+
+        self.is_running = False
 
     # ------------------------------------------------------------------
     # Ring timer callbacks
@@ -100,38 +152,6 @@ class Playback:
             return
         self._ring_timer = threading.Timer(self._ring_pause_dur, self._fire_burst)
         self._ring_timer.start()
-
-    def ring(
-        self,
-        tone_dur: float = 1.0,
-        pause_dur: float = 3.0,
-    ) -> None:
-        """
-        Start the ringing tone sequence (non-blocking).
-
-        Fires repeating bursts of *tone_dur* seconds separated by *pause_dur*
-        seconds of silence, driven entirely by threading.Timer callbacks.
-        Returns immediately. Call stop() to end at any time.
-
-        :param tone_dur: Duration of each ring burst in seconds.
-        :param pause_dur: Silence between bursts in seconds.
-        """
-        if self._ring_timer is not None:
-            return  # already ringing
-
-        self._ring_stop.clear()
-        self._ring_tone_dur = tone_dur
-        self._ring_pause_dur = pause_dur
-        self._ring_burst_count = 0
-        self._ring_signal = (
-            0.1 * np.sin(
-                2 * np.pi * self.freq *
-                np.linspace(0, tone_dur, int(self.rate * tone_dur), endpoint=False)
-            )
-        ).astype(np.float32)
-
-        self._fire_burst()
-        print("Tones: Ring tone started.")
 
     # ------------------------------------------------------------------
     # Blocking tones

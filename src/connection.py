@@ -140,6 +140,7 @@ class Connection:
                         self._ws.send(msg)
                     except Exception as e:
                         print(f"Audio: Microhpone send error: {e}")
+
         except Exception as e:
             print(f"Audio: Send thread error: {e}")
         finally:
@@ -158,6 +159,7 @@ class Connection:
                     print("Receive: Invalid JSON data.")
                     continue
                 self._handle_event(data)
+
         except Exception as e:
             print(f"Receive: Thread error: {e}")
         finally:
@@ -170,9 +172,11 @@ class Connection:
         if event_type == "session.created":
             self._send_session_update()
 
+        elif event_type == "response.created":
+            self.ready_event.set()
+
         # AI is answering
         elif event_type == "response.audio.delta":
-            self.ready_event.set()
             self.audio_buffer.extend(base64.b64decode(data["delta"]))
 
         # Caller started speaking
@@ -194,11 +198,16 @@ class Connection:
                 self._process_transcript(transcript)
 
         elif event_type == "conversation.item.input_audio_transcription.failed":
-            print(f"Converation: User transcription failed: {data.get('error', {})}")
+            print(f"Conversation: User transcription failed: {data.get('error', {})}")
 
         # Transcription of AI speech
         elif event_type == "response.audio_transcript.done":
             print(f"*AI*: {data.get('transcript', '')}")
+
+        elif event_type == "error":
+            print(f"Conversation: Error: {data}")
+        #else:
+        #    print(f"Receive: Unknown event type: {event_type}")
 
     def _send_session_update(self) -> None:
         """Push the current session configuration (instructions, voice, VAD …) to the API."""

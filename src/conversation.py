@@ -81,10 +81,13 @@ class Conversation:
             return
 
         print("Conversation: Stopping...")
+
         self.stop_event.set()
         self.ready_event.clear()
+
         if self._thread:
             self._thread.join(timeout=5)
+
         self.is_running = False
 
     @property
