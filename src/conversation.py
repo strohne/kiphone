@@ -47,7 +47,6 @@ class Conversation:
         self._mic_on_at: float = 0.0
 
         self.chunk_size = 2048
-        self.format = pyaudio.paInt16
         self.reengage_delay = 500
         self.rate = 24000
 
@@ -117,7 +116,7 @@ class Conversation:
 
         p = pyaudio.PyAudio()
         mic_stream = p.open(
-            format=self.format,
+            format=pyaudio.paInt16,
             channels=1,
             rate=self.rate,
             input=True,
@@ -125,7 +124,7 @@ class Conversation:
             frames_per_buffer=self.chunk_size,
         )
         speaker_stream = p.open(
-            format=self.format,
+            format=pyaudio.paInt16,
             channels=1,
             rate=self.rate,
             output=True,
