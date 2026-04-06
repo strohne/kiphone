@@ -73,9 +73,12 @@ Type=Application
 Name=kiphone
 Exec=/home/devel/.virtualenvs/kiphone/bin/python /home/devel/Code/kiphone/main.py
 ```
+
 Note: Adjust the path to your Python executable and the main.py script accordingly.
 In the example above, it assumes you have a virtual environment located at `/home/devel/.virtualenvs/kiphone´.
 This is the default venv path that PyCharm suggested.
+Further, autostart sets the working directory not to the script directory.
+Thererfore, in the script, always use absolute paths to access files.
 
 Save with Ctrl-O, then exit with Ctrl-X
 
