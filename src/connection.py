@@ -286,9 +286,9 @@ class Connection:
                     }))
                     time.sleep(chunk_duration)
 
-            # Commit the greeting as a complete utterance.
-            # server_vad will automatically create a response after the commit.
-            self._ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
+            # No manual commit or response.create needed here.
+            # server_vad detects end-of-speech in the injected audio,
+            # commits the buffer and creates the response automatically.
             print("Audio: Injected file.")
         except Exception as e:
             print(f"Audio: Could not inject audio: {e}")
