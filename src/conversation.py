@@ -2,7 +2,6 @@
 # Create conversation singleton
 #
 
-import os
 import queue
 import threading
 import time
@@ -10,11 +9,17 @@ import wave
 import datetime
 import random
 
+import pathlib
 import numpy as np
 import pyaudio
 
 from config.roles import roles as roles
 from src.connection import Connection
+
+# Absolute path to the project root, independent of the working directory.
+# This ensures assets and recordings are found even when the process is
+# launched via autostart with a different working directory (e.g. / or ~).
+_BASE = pathlib.Path(__file__).resolve().parent.parent
 
 class Conversation:
     """
@@ -70,7 +75,7 @@ class Conversation:
         self.is_running = True
 
         self.role = role
-        self.greeting = "assets/greeting.wav" if greeting else None
+        self.greeting = str(_BASE / "assets" / "greeting.wav") if greeting else None
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
@@ -177,10 +182,11 @@ class Conversation:
 
     def _start_recording(self) -> None:
         """Open a timestamped WAV file to record the microphone input."""
-        os.makedirs("recordings", exist_ok=True)
+        recordings_dir = _BASE / "recordings"
+        recordings_dir.mkdir(exist_ok=True)
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        wav_path = os.path.join("recordings", f"mic_{timestamp}.wav")
-        self._mic_wav_file = wave.open(wav_path, "wb")
+        wav_path = recordings_dir / f"mic_{timestamp}.wav"
+        self._mic_wav_file = wave.open(str(wav_path), "wb")
         self._mic_wav_file.setnchannels(1)
         self._mic_wav_file.setsampwidth(2)   # paInt16 = 2 bytes
         self._mic_wav_file.setframerate(self.rate)
