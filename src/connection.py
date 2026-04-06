@@ -55,6 +55,10 @@ class Connection:
         self.greeting = greeting
         self._ws = None
 
+        # True while the API has an active response in progress.
+        # Guards against sending response.create on top of an existing one.
+        self._response_active: bool = False
+
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
@@ -73,7 +77,9 @@ class Connection:
             recv_thread.start()
             send_thread.start()
 
-            self._send_session_update()
+            # NOTE: _send_session_update() is NOT called here.
+            # The server always sends session.created right after the connection
+            # is established; _handle_event() picks that up and calls it exactly once.
 
             if self.greeting:
                 print(f"Connection: Injecting {self.greeting}")
@@ -173,7 +179,11 @@ class Connection:
             self._send_session_update()
 
         elif event_type == "response.created":
+            self._response_active = True
             self.ready_event.set()
+
+        elif event_type in ("response.done", "response.cancelled"):
+            self._response_active = False
 
         # AI is answering
         elif event_type == "response.audio.delta":
@@ -276,8 +286,9 @@ class Connection:
                     }))
                     time.sleep(chunk_duration)
 
+            # Commit the greeting as a complete utterance.
+            # server_vad will automatically create a response after the commit.
             self._ws.send(json.dumps({"type": "input_audio_buffer.commit"}))
-            self._ws.send(json.dumps({"type": "response.create"}))
             print("Audio: Injected file.")
         except Exception as e:
             print(f"Audio: Could not inject audio: {e}")
